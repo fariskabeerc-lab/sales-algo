@@ -35,7 +35,7 @@ if not st.session_state["authenticated"]:
 st.title("📊SAFA oud mehta Sales Insights")
 
 # --- Load Data ---
-df = pd.read_excel("sub catogory 2025.Xlsx")   # change filename
+df = pd.read_excel("sub cat(1).Xlsx")   # change filename
 
 # Ensure numeric
 numeric_cols = ["Qty Sold", "Total Sales", "Total Profit"]
