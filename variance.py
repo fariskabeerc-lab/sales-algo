@@ -32,7 +32,7 @@ if not st.session_state["authenticated"]:
 # ===========================================================
 # --- Dashboard Code ---
 # ===========================================================
-st.title("📊SAFA oud mehta OCT 1,2 Sales Insights")
+st.title("📊SAFA oud mehta Sales Insights")
 
 # --- Load Data ---
 df = pd.read_excel("sub catogory 2025.Xlsx")   # change filename
