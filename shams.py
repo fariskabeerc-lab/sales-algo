@@ -150,27 +150,55 @@ fig_cat = px.bar(
 fig_cat.update_traces(texttemplate='%{text:,.0f}', textposition="outside")
 st.plotly_chart(fig_cat, use_container_width=True)
 
-# Subcategory-wise
-subcat_summary = (
-    df.groupby([category_col, subcategory_col])
-    .agg({"Qty Sold":"sum", "Total Sales":"sum", "Total Profit":"sum"})
-    .reset_index()
-)
-subcat_summary["GP%"] = (subcat_summary["Total Profit"] / subcat_summary["Total Sales"]) * 100
 
-st.subheader("🔖 Subcategory-wise Sales & Profit")
-fig_subcat = px.bar(
-    subcat_summary, x="Total Sales", y=subcategory_col, orientation="h",
-    color="Total Profit", text="Total Sales",
-    color_continuous_scale="Greens", hover_data={"GP%":":.2f"}
-)
-fig_subcat.update_traces(texttemplate='%{text:,.0f}', textposition="outside")
-st.plotly_chart(fig_subcat, use_container_width=True)
+# ===========================================================
+# --- UPDATED SUBCATEGORY CHART (Visible Only When Category Selected) ---
+# ===========================================================
+if selected_category != "All":
+    st.subheader(f"🔖 Subcategory-wise Sales & Profit ({selected_category})")
+
+    subcat_summary = (
+        df.groupby([category_col, subcategory_col])
+        .agg({"Qty Sold": "sum", "Total Sales": "sum", "Total Profit": "sum"})
+        .reset_index()
+    )
+    subcat_summary["GP%"] = (subcat_summary["Total Profit"] / subcat_summary["Total Sales"]) * 100
+
+    subcat_summary = subcat_summary[subcat_summary[category_col] == selected_category]
+
+    fig_subcat = px.bar(
+        subcat_summary,
+        x="Total Sales",
+        y=subcategory_col,
+        orientation="h",
+        color="Total Profit",
+        text="Total Sales",
+        color_continuous_scale="Viridis",
+        hover_data={"GP%": ":.2f", "Qty Sold": ":,.0f"}
+    )
+
+    fig_subcat.update_traces(
+        texttemplate='%{text:,.0f}',
+        textposition="outside",
+        marker_line_width=1.5,
+        marker_line_color="black"
+    )
+
+    fig_subcat.update_layout(
+        height=700,
+        yaxis=dict(tickmode="linear", dtick=1, categoryorder="total ascending"),
+        margin=dict(l=20, r=20, t=40, b=20),
+        bargap=0.35
+    )
+
+    st.plotly_chart(fig_subcat, use_container_width=True)
+else:
+    st.info("ℹ️ Select a category to view subcategory-wise analysis.")
 
 st.markdown("---")
 
 # ===========================================================
-# --- Tabs (Sales, Profit, Qty, High/Low Analysis) ---
+# --- Tabs (Sales, Profit, Quantity, High/Low Analysis) ---
 # ===========================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "💰 Sales", 
@@ -180,22 +208,18 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "💡 Low Sales, High Profit"
 ])
 
-# --- Tab 1: Sales ---
 with tab1:
     fig_sales, top_sales = plot_top(item_summary, "Total Sales", "Top 50 Items by Sales", "Blues", n=50)
     st.plotly_chart(fig_sales, use_container_width=True)
 
-# --- Tab 2: Profit ---
 with tab2:
     fig_profit, top_profit = plot_top(item_summary, "Total Profit", "Top 50 Items by Profit", "Greens", n=50)
     st.plotly_chart(fig_profit, use_container_width=True)
 
-# --- Tab 3: Quantity ---
 with tab3:
     fig_qty, top_qty = plot_top(item_summary, "Qty Sold", "Top 50 Items by Quantity Sold", "Oranges", n=50)
     st.plotly_chart(fig_qty, use_container_width=True)
 
-# --- Tab 4: High Sales, Low Profit ---
 with tab4:
     qty_threshold = item_summary["Qty Sold"].quantile(0.75)
     profit_threshold = item_summary["Total Profit"].quantile(0.25)
@@ -207,7 +231,6 @@ with tab4:
     st.subheader("⚠️ Items with High Quantity Sold but Low Profit")
     st.dataframe(problem_items[["Item Code","Items","Category","Category4","Qty Sold","Total Sales","Total Profit","GP%"]])
 
-# --- Tab 5: Low Sales, High Profit ---
 with tab5:
     qty_threshold = item_summary["Qty Sold"].quantile(0.25)
     profit_threshold = item_summary["Total Profit"].quantile(0.75)
@@ -225,7 +248,6 @@ with tab5:
 st.markdown("---")
 st.markdown("## 🧾 Full Item-wise Sales Summary (Filtered)")
 
-# Search bar
 search_query = st.text_input("🔍 Search Item / Item Code")
 filtered_table = item_summary.copy()
 
@@ -235,7 +257,6 @@ if search_query:
         filtered_table["Item Code"].astype(str).str.contains(search_query, case=False, na=False)
     ]
 
-# Sort & format
 filtered_table = filtered_table.sort_values("Total Sales", ascending=False)
 formatted_table = filtered_table.copy()
 formatted_table["Qty Sold"] = formatted_table["Qty Sold"].map("{:,.0f}".format)
@@ -251,7 +272,6 @@ st.dataframe(
     hide_index=True
 )
 
-# --- Download Filtered Data ---
 csv = filtered_table.to_csv(index=False).encode('utf-8')
 st.download_button(
     label="📥 Download Filtered Item-wise Data (CSV)",
