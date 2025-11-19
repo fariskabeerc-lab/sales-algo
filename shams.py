@@ -84,13 +84,19 @@ item_summary["GP%"] = (item_summary["Total Profit"] / item_summary["Total Sales"
 # --- KPIs ---
 # ===========================================================
 st.markdown("### 📌 Key Highlights")
-col1, col2, col3 = st.columns(3)
 
-col1.metric("💰 Total Sales", f"{item_summary['Total Sales'].sum():,.0f}")
-col2.metric("📈 Total Profit", f"{item_summary['Total Profit'].sum():,.0f}")
-col3.metric("📦 Total Qty Sold", f"{item_summary['Qty Sold'].sum():,.0f}")
+total_sales = item_summary["Total Sales"].sum()
+total_profit = item_summary["Total Profit"].sum()
+total_qty = item_summary["Qty Sold"].sum()
 
-st.markdown("---")
+gp_percent = (total_profit / total_sales) * 100 if total_sales != 0 else 0
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("💰 Total Sales", f"{total_sales:,.0f}")
+col2.metric("📈 Total Profit", f"{total_profit:,.0f}")
+col3.metric("📦 Total Qty Sold", f"{total_qty:,.0f}")
+col4.metric("📊 GP%", f"{gp_percent:.2f}%")
 
 # ===========================================================
 # --- Category & Subcategory Updated Charts ---
