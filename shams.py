@@ -184,7 +184,7 @@ st.markdown("---")
 # ===========================================================
 # --- Top N Charts Function ---
 # ===========================================================
-def plot_top(df, metric, color, n=50):
+def plot_top(df, metric, title, color, n=50):
     top = df.sort_values(metric, ascending=False).head(n)
     fig = px.bar(
         top,
@@ -205,11 +205,11 @@ def plot_top(df, metric, color, n=50):
         }
     )
     fig.update_traces(texttemplate='%{text:,.0f}', textposition="outside")
-    fig.update_layout(height=600, yaxis=dict(autorange="reversed"), margin=dict(l=10, r=10, t=40, b=10), coloraxis_showscale=False)
+    fig.update_layout(height=1200, yaxis=dict(autorange="reversed"), margin=dict(l=10, r=10, t=40, b=10), coloraxis_showscale=False)
     return fig, top
 
 # ===========================================================
-# --- Tabs with charts and tables ---
+# --- Tabs with charts and corresponding tables ---
 # ===========================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "💰 Sales",
@@ -219,46 +219,28 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "💡 Low Sales, High Profit"
 ])
 
-# --- Tab 1: Sales ---
+# Tab 1: Sales
 with tab1:
-    fig_sales, top_sales = plot_top(filtered_summary, "Total Sales", "Blues", n=50)
+    fig_sales, top_sales = plot_top(filtered_summary, "Total Sales", "Top 50 Items by Sales", "Blues", n=50)
     st.plotly_chart(fig_sales, use_container_width=True)
-    
     st.markdown("### 📋 Top 50 Items by Sales")
-    table_sales = top_sales.copy()
-    table_sales["Qty Sold"] = table_sales["Qty Sold"].map("{:,.0f}".format)
-    table_sales["Total Sales"] = table_sales["Total Sales"].map("{:,.0f}".format)
-    table_sales["Total Profit"] = table_sales["Total Profit"].map("{:,.0f}".format)
-    table_sales["GP%"] = table_sales["GP%"].map("{:.2f}%".format)
-    st.dataframe(table_sales[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]], use_container_width=True)
+    st.dataframe(top_sales[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]].sort_values("Total Sales", ascending=False), use_container_width=True)
 
-# --- Tab 2: Profit ---
+# Tab 2: Profit
 with tab2:
-    fig_profit, top_profit = plot_top(filtered_summary, "Total Profit", "Greens", n=50)
+    fig_profit, top_profit = plot_top(filtered_summary, "Total Profit", "Top 50 Items by Profit", "Greens", n=50)
     st.plotly_chart(fig_profit, use_container_width=True)
-    
     st.markdown("### 📋 Top 50 Items by Profit")
-    table_profit = top_profit.copy()
-    table_profit["Qty Sold"] = table_profit["Qty Sold"].map("{:,.0f}".format)
-    table_profit["Total Sales"] = table_profit["Total Sales"].map("{:,.0f}".format)
-    table_profit["Total Profit"] = table_profit["Total Profit"].map("{:,.0f}".format)
-    table_profit["GP%"] = table_profit["GP%"].map("{:.2f}%".format)
-    st.dataframe(table_profit[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]], use_container_width=True)
+    st.dataframe(top_profit[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]].sort_values("Total Profit", ascending=False), use_container_width=True)
 
-# --- Tab 3: Quantity ---
+# Tab 3: Quantity
 with tab3:
-    fig_qty, top_qty = plot_top(filtered_summary, "Qty Sold", "Oranges", n=50)
+    fig_qty, top_qty = plot_top(filtered_summary, "Qty Sold", "Top 50 Items by Quantity Sold", "Oranges", n=50)
     st.plotly_chart(fig_qty, use_container_width=True)
-    
     st.markdown("### 📋 Top 50 Items by Quantity Sold")
-    table_qty = top_qty.copy()
-    table_qty["Qty Sold"] = table_qty["Qty Sold"].map("{:,.0f}".format)
-    table_qty["Total Sales"] = table_qty["Total Sales"].map("{:,.0f}".format)
-    table_qty["Total Profit"] = table_qty["Total Profit"].map("{:,.0f}".format)
-    table_qty["GP%"] = table_qty["GP%"].map("{:.2f}%".format)
-    st.dataframe(table_qty[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]], use_container_width=True)
+    st.dataframe(top_qty[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]].sort_values("Qty Sold", ascending=False), use_container_width=True)
 
-# --- Tab 4: High Sales, Low Profit ---
+# Tab 4: High Sales, Low Profit
 with tab4:
     qty_high = filtered_summary["Qty Sold"].quantile(0.75)
     profit_low = filtered_summary["Total Profit"].quantile(0.25)
@@ -269,7 +251,7 @@ with tab4:
     st.subheader("⚠️ High Sales but Low Profit")
     st.dataframe(problem_items.sort_values("Qty Sold", ascending=False), use_container_width=True)
 
-# --- Tab 5: Low Sales, High Profit ---
+# Tab 5: Low Sales, High Profit
 with tab5:
     qty_low = filtered_summary["Qty Sold"].quantile(0.25)
     profit_high = filtered_summary["Total Profit"].quantile(0.75)
@@ -287,11 +269,6 @@ st.markdown("---")
 st.markdown("## 🧾 Full Item-wise Table")
 
 formatted = filtered_summary.copy().sort_values("Total Sales", ascending=False)
-formatted["Qty Sold"] = formatted["Qty Sold"].map("{:,.0f}".format)
-formatted["Total Sales"] = formatted["Total Sales"].map("{:,.0f}".format)
-formatted["Total Profit"] = formatted["Total Profit"].map("{:,.0f}".format)
-formatted["GP%"] = formatted["GP%"].map("{:.2f}%".format)
-
 st.dataframe(formatted[["Item Code","Items",category_col,subcategory_col,"Qty Sold","Total Sales","Total Profit","GP%"]],
              use_container_width=True)
 
